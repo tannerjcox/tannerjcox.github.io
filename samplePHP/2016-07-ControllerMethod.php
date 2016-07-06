@@ -1,3 +1,4 @@
+//ControllerMethod
 public function authenticateUpdate($id)
     {
         $product = Product::find($id);
