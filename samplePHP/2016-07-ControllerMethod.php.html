@@ -1,4 +1,10 @@
-//ControllerMethod
+<script src="http://www.w3schools.com/lib/w3data.js"></script>
+<script>
+w3IncludeHTML();
+</script>
+<div w3-include-html="includes/header.html"></div>
+<!--ControllerMethod-->
+<div>
 public function authenticateUpdate($id)
     {
         $product = Product::find($id);
@@ -49,3 +55,4 @@ public function authenticateUpdate($id)
             'message' => $message
         ]);
     }
+    </div>
