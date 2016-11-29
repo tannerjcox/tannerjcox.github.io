@@ -32,34 +32,14 @@ public function receiveProduct($pendingItem, $previousProduct, $input, $admin)
         $product->hold_status = 'approval_awaiting';
         $product->quantity = 1;
         $product->is_enabled = false;
-        $product->checker_id = $admin->id;
-        $product->warehouse_id = $admin->warehouse_id;
-        $product->check_in_warehouse_id = $admin->warehouse_id;
-        $product->pending_item_id = $pendingItem ? $pendingItem->id : null;
-        $product->reference_product_id = array_get($input, 'reference_product_id') ?: ($pendingItem ? $pendingItem->reference_product_id : null);
-        $product->supplier_id = array_get($input, 'userId');
-        $product->date_code = array_get($input, 'date_code') ?: null;
-        $product->ships_with = array_get($input, 'ships_with') ?: null;
-        $product->flagged_interesting_at = array_get($input, 'flag_as_interesting') ? Carbon::now() : null;
-        $product->length = array_get($input, 'length', $product->length);
-        $product->width = array_get($input, 'width', $product->width);
-        $product->height = array_get($input, 'height', $product->height);
-        $product->drop = array_get($input, 'drop', $product->drop);
-        $product->year = array_get($input, 'year', $product->year);
-        $product->season = array_get($input, 'season', $product->season);
+        $product->updateFromAdmin($admin);
+        $product->updateFromInput($input);
         if ($pendingItem && $pendingItem->is_showroom_quote) {
             if (!SkuType::isConsignment($sku) && array_get($input, 'supplier_is_paid')  == 'Yes') {
                 $product->buyout_paid_at = $now;
                 $product->purchase_price = $pendingItem->buyout_quote;
             }
-            $product->retail_price = $pendingItem->retail_price;
-            $product->price = $pendingItem->product_price;
-            $product->pricer_id = $pendingItem->admin_id;
-            $product->priced_at = $pendingItem->created_at;
-            $pendingItemPresenter = $pendingItem->getPresenter();
-            $product->condition = $pendingItemPresenter->product_general_condition;
-            $product->reviewer_id = Admin::FASHIONPHILE_BOT;
-            $product->reviewed_at = Carbon::now();
+            $product->updatePriceAndReviewFromPendingItem($pendingItem);
             if (array_get($input, 'is_authentic')) {
                 $this->markAsAuthentic($product, $pendingItem->admin_id);
                 if (!SkuType::isConsignment($sku)) {

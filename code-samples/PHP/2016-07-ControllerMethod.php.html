@@ -10,7 +10,6 @@ public function authenticateUpdate($id)
             $message = 'Item successfully authenticated';
             $pendingItem = $product->pendingItem;
             if ($product->isBuyOut()) {
-                $this->accountBalanceCreditRepository->payUserForAuthenticAndReviewedProduct($product->supplier, $product, $pendingItem);
                 $this->accountBalanceTransactionRepository->payUserForAuthenticAndReviewedProduct($product->supplier, $product, $pendingItem);
             }
             break;

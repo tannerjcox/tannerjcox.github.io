@@ -16,10 +16,8 @@ $(function () {
   $('.main-content').load('includes/' + currentPage + '.html');
   $('.nav-item').removeClass('active');
   $('.' + currentPage + '').addClass('active');
-  if (currentPage == 'code-samples') {
-    displaySampleLinks();
-  }
-  $('.sample').click(function () {
+  displaySampleLinks();
+  $('.code-samples').click(function () {
     displaySampleLinks();
   });
 });
@@ -38,7 +36,7 @@ function displaySampleLinks() {
     $('#codeSampleLinks').html(links);
   }).done(function () {
     $('.code-sample').click(function () {
-      $('.sample-title').html('<h2 class="text-center">' + $(this).text() + '</h2>');
+      $('.sample-title').html('<h2>' + $(this).text() + '</h2>');
       $('.sample-content').load($(this).data('url'), function() {
         $('pre code').each(function(i, block) {
           hljs.highlightBlock(block);
