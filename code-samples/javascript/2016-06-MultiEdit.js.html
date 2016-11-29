@@ -1,81 +1,84 @@
-<head>
-</head>
-<body>
-<header id="includedContent"></header>
+<pre>
+    <code>
+var $alert = $("#success-alert");
+    $alert.hide();
 
-<span>//MultiEdit functions</span>
-<p class="p1"><span class="s1">$(function () {</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; var $alert = $("#success-alert");</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; $alert.hide();</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; $('.create-condition').click(function () {</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; var $newCondition = $('#new-condition-' + $(this).attr('data-id'));</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; var name = $newCondition.val(), parentId = $newCondition.attr('data-id');</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; $.ajax({</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dataType: 'json',</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; url: '/admin/conditions',</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; type: 'POST',</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; data: {</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; name: name,</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; parentId: parentId</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; }).done(function (response) {</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $('&lt;div class="list-group-item row row-' + response.id + ' p-t-5"&gt;' +</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; '&lt;div class="col-md-10 p-t-10"&gt;&lt;span id="condition-' + response.id + '"&gt;' + name + '&lt;/span&gt;&lt;/div&gt;' +</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; '&lt;div class="p-t-10 p-b-5 col-md-2 text-center" &gt;&lt;span class="alert alert-success"&gt;' + response.action + '!&lt;/span&gt;&lt;/div&gt;' +</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; '&lt;/div&gt;')</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; .insertAfter("#new-row-" + parentId);</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $('#new-condition-' + parentId).val('').attr('placeholder', 'Add Another!').focus();</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; })</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; });</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; $('.new-condition-input').keyup(function(event){</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; if(event.keyCode == 13){</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; id = $(this).attr('data-id');</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $('#create-' + id).click();</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $(this).focus();</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; }</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; });</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; $('.edit-condition').click(function () {</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; var id = $(this).data('id'), name = $('#condition-' + id).text();</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; $('#editModal').find('.modal-title').text('Edit Condition ' + name);</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; $('#update-condition-input').html('&lt;input type="text" name="update-condition" id="update-condition-' + id + '" data-id="' + id + '" class="form-control" value="' + name + '"&gt;')</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; });</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; $('#edit-confirm').click(function () {</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; var id = $('[name="update-condition"]').data('id');</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; var updatedName = $('#update-condition-' + id).val();</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; $.ajax({</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dataType: 'json',</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; url: '/admin/conditions/' + id,</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; type: 'PUT',</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; data: {name: updatedName}</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; }).done(function (response) {</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $('#condition-' + id).html(updatedName);</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $('#edit-' + id).attr('data-name', updatedName);</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $('#delete-' + id).attr('data-name', updatedName);</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; sAlert(response.action);</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; });</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; });</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; $('.delete-condition').click(function () {</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; var id = $(this).data('id'), name = $('#condition-' + id).text(), $modal = $('#deleteModal');</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; $modal.find('.modal-title').text('Delete Condition ' + name);</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; $modal.find('.modal-body').html('&lt;div id="deleteText" data-id="' + $(this).data('id') + '"&gt; "Are you sure you want to delete this condition: "' +</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; name + '"?&nbsp; This will also remove this condition from any products.&lt;/div&gt;');</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; });</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; $('#delete-confirm').click(function () {</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; id = $('#deleteText').data('id');</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; $.ajax({</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dataType: 'json',</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; url: '/admin/conditions/' + id,</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; type: 'DELETE'</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; }).done(function (response) {</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; sAlert(response.action);</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $('.row-' + id).remove();</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; });</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; });</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; function sAlert(action) {</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; $alert.text('Item successfully ' + action);</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; $alert.alert();</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; $alert.fadeTo(4000, 500).slideUp(500, function() {</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $alert.hide();</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; &nbsp; &nbsp; });</span></p>
-<p class="p1"><span class="s1">&nbsp; &nbsp; }</span></p>
-<p class="p1"><span class="s1">});</span></p>
+    $('.create-condition').click(function () {
+        var $newCondition = $('#new-condition-' + $(this).attr('data-id'));
+        var name = $newCondition.val(), parentId = $newCondition.attr('data-id');
+        $.ajax({
+            dataType: 'json',
+            url: '/admin/conditions',
+            type: 'POST',
+            data: {
+                name: name,
+                parentId: parentId
+            }
+        }).done(function (response) {
+            $('&ltdiv class="list-group-item row row-' + response.id + ' p-t-5"&gt' +
+                '&ltdiv class="col-md-10 p-t-10"&gt&ltspan id="condition-' + response.id + '"&gt' + name + '&lt/span&gt&lt/div&gt' +
+                '&ltdiv class="p-t-10 p-b-5 col-md-2 text-center" &gt&ltspan class="alert alert-success"&gt' + response.action + '!&lt/span&gt&lt/div&gt' +
+                '&lt/div&gt')
+                .insertAfter("#new-row-" + parentId);
+            $('#new-condition-' + parentId).val('').attr('placeholder', 'Add Another!').focus();
+        })
+    });
+
+    $('.new-condition-input').keyup(function(event){
+        if(event.keyCode == 13){
+            id = $(this).attr('data-id');
+            $('#create-' + id).click();
+            $(this).focus();
+        }
+    });
+
+    $('.edit-condition').click(function () {
+        var id = $(this).data('id'), name = $('#condition-' + id).text();
+        $('#editModal').find('.modal-title').text('Edit Condition ' + name);
+        $('#update-condition-input').html('&ltinput type="text" name="update-condition" id="update-condition-' + id + '" data-id="' + id + '" class="form-control" value="' + name + '"&gt')
+    });
+
+    $('#edit-confirm').click(function () {
+        var id = $('[name="update-condition"]').data('id');
+        var updatedName = $('#update-condition-' + id).val();
+        $.ajax({
+            dataType: 'json',
+            url: '/admin/conditions/' + id,
+            type: 'PUT',
+            data: {name: updatedName}
+        }).done(function (response) {
+            $('#condition-' + id).html(updatedName);
+            $('#edit-' + id).attr('data-name', updatedName);
+            $('#delete-' + id).attr('data-name', updatedName);
+            sAlert(response.action);
+        });
+    });
+
+    $('.delete-condition').click(function () {
+        var id = $(this).data('id'), name = $('#condition-' + id).text(), $modal = $('#deleteModal');
+        $modal.find('.modal-title').text('Delete Condition ' + name);
+        $modal.find('.modal-body').html('&ltdiv id="deleteText" data-id="' + $(this).data('id') + '"&gt "Are you sure you want to delete this condition: "' +
+            name + '"?  This will also remove this condition from any products.&lt/div&gt');
+    });
+
+    $('#delete-confirm').click(function () {
+        id = $('#deleteText').data('id');
+        $.ajax({
+            dataType: 'json',
+            url: '/admin/conditions/' + id,
+            type: 'DELETE'
+        }).done(function (response) {
+            sAlert(response.action);
+            $('.row-' + id).remove();
+        });
+    });
+
+    function sAlert(action) {
+        $alert.text('Item successfully ' + action);
+        $alert.alert();
+        $alert.fadeTo(4000, 500).slideUp(500, function() {
+            $alert.hide();
+        });
+    }
+    </code>
+</pre>

@@ -205,10 +205,11 @@ a {
 
 @media screen and (min-width: 64em) {
   .main-content {
-    max-width: 64rem;
+    max-width: 84rem;
     padding: 2rem 6rem;
     margin: 0 auto;
-    font-size: 1.1rem; } }
+    font-size: 1.1rem;
+    overflow-x: scroll;} }
 
 @media screen and (min-width: 42em) and (max-width: 64em) {
   .main-content {

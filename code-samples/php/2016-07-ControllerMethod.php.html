@@ -1,61 +1,46 @@
-  <head>
-      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<pre>
+    <code>
+public function authenticateUpdate($id)
+{
+    $product = Product::find($id);
+    $status = Input::get('auth_status');
+    switch ($status) {
+        case ProductAuthenticationStatus::AUTHENTIC:
+            $this->productRepository->markAsAuthentic($product, Auth::admin()->get()->id);
+            $message = 'Item successfully authenticated';
+            $pendingItem = $product->pendingItem;
+            if ($product->isBuyOut()) {
+                $this->accountBalanceCreditRepository->payUserForAuthenticAndReviewedProduct($product->supplier, $product, $pendingItem);
+                $this->accountBalanceTransactionRepository->payUserForAuthenticAndReviewedProduct($product->supplier, $product, $pendingItem);
+            }
+            break;
+        case ProductAuthenticationStatus::FAKE:
+            $product->authentication_status = $status;
+            $product->removed_from_inventory_at = Carbon::now();
+            $product->save();
+            $waiveFee = Input::get('waive_fee') == 'true';
+            $this->productRepository->notAuthenticActions($product, $waiveFee);
+            $message = 'Item marked as fake.' . ($waiveFee ? ' Return fee waived' : '');
+            break;
+        default:
+            $data = [
+                'location_1' => 'My Desk',
+                'location_2' => '',
+                'location_3' => ''
+            ];
+            $this->productLocationsLogRepository->updateForProduct($product, Auth::admin()->get(), $data);
+            $message = 'Location updated to your desk for further review';
+            $product->authentication_status = $status;
+            $product->authenticator_id = Auth::admin()->get()->id;
+            $product->authenticated_at = Carbon::now();
+            $product->save();
+            break;
+    }
 
-  </head> 
-  <body>
-<header id="includedContent"></header>
-
-<span>//Controller Method</span>
-<div>
-<p class="p1"><span class="s1">public function authenticateUpdate($id)</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; </span>{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; </span>$product = Product::find($id);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; </span>$status = Input::get('auth_status');</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; </span>switch ($status) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>case ProductAuthenticationStatus::AUTHENTIC:</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$this-&gt;productRepository-&gt;markAsAuthentic($product, Auth::admin()-&gt;get()-&gt;id);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$message = 'Item successfully authenticated';</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$pendingItem = $product-&gt;pendingItem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>if ($product-&gt;isBuyOut()) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$this-&gt;accountBalanceCreditRepository-&gt;payUserForAuthenticAndReviewedProduct($product-&gt;supplier, $product, $pendingItem);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>break;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>case ProductAuthenticationStatus::FAKE:</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$product-&gt;authentication_status = $status;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$product-&gt;removed_from_inventory_at = Carbon::now();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$product-&gt;save();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$message = 'Item marked as fake';</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$context = [</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>'name' =&gt; $product-&gt;supplier-&gt;first_name,</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>'email' =&gt; $product-&gt;supplier-&gt;email,</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>'brand' =&gt; $product-&gt;brand()-&gt;name</span></p>
-<p class="p2">&nbsp;</p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$this-&gt;userMailer-&gt;sendNotAuthenticEmail($context);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$attributes = [</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>'comment' =&gt; 'Email regarding not authentic sent to supplier'</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$this-&gt;commentRepository-&gt;createFromAdmin($attributes, $product, Auth::admin()-&gt;get());</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>break;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>default:</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$data = [</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>'location_1' =&gt; 'My Desk',</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>'location_2' =&gt; '',</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>'location_3' =&gt; ''</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$this-&gt;productLocationsLogRepository-&gt;updateForProduct($product, Auth::admin()-&gt;get(), $data);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$message = 'Location updated to your desk for further review';</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$product-&gt;authentication_status = $status;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$product-&gt;authenticator_id = Auth::admin()-&gt;get()-&gt;id;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$product-&gt;authenticated_at = Carbon::now();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>$product-&gt;save();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>break;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; </span>}</span></p>
-<p class="p2">&nbsp;</p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; </span>return Response::json([</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>'success' =&gt; true,</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span>'message' =&gt; $message</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; &nbsp; &nbsp; </span>]);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">&nbsp; &nbsp; </span>}</span></p>
-</div>
-</body>
+    return Response::json([
+        'success' => true,
+        'message' => $message
+    ]);
+}
+    </code>
+</pre>
