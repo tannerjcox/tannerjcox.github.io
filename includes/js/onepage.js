@@ -34,7 +34,7 @@ $(function () {
 });
 
 function displaySampleLinks() {
-  links = '';
+  var links = '';
   $.getJSON('/code-samples/samples.json', function (data) {
     $.each(data, function (key, val) {
       $.each(val, function (type, files) {
