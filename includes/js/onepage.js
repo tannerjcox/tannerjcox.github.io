@@ -26,8 +26,8 @@ function showHideHomeImage(isHomePage) {
 }
 
 function handleHeaderLinks(currentPage) {
-  $('.container').addClass('invisible');
-  $('.' + currentPage + '-container').removeClass('invisible');
+  $('.container').addClass('hidden-xs-up');
+  $('.' + currentPage + '-container').removeClass('hidden-xs-up');
   $('.nav-item').removeClass('active');
   $('.' + currentPage + '').addClass('active');
 }
