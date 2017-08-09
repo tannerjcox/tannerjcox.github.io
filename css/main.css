@@ -135,3 +135,7 @@ html, body {
     border-radius: 0;
   }
 }
+
+.main-content {
+  overflow: hidden;
+}
