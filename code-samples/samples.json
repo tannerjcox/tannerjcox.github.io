@@ -1,7 +1,7 @@
 [
   {
     "PHP": {
-      "Repository Method": "2016-06-RepoMethod.php.html",
+      "Repository Methods": "2016-06-RepoMethod.php.html",
       "Controller Method": "2016-07-ControllerMethod.php.html"
     }
   },
@@ -10,6 +10,11 @@
       "Multiple DropDown Edit": "2016-06-MultiEdit.js.html",
       "Generic": "2016-07-Generic.js.html",
       "One Page": "Nov_2016_OnePage.js.html"
+    }
+  },
+  {
+    "Stack": {
+      "Embedded Reports Example": "2016-03-EmbeddedReportsStack.html"
     }
   }
 ]

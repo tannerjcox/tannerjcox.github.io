@@ -46,16 +46,22 @@ function displaySampleLinks() {
     });
     $('#codeSampleLinks').html(links);
   }).done(function () {
+    renderSamples();
     $('.code-sample').click(function () {
-      $('.sample-title').html('<h2>' + $(this).text() + '</h2>');
-      $('.sample-content').load($(this).data('url'), function () {
-        $('pre code').each(function (i, block) {
-          hljs.highlightBlock(block);
-        });
-      });
+      renderSamples();
     });
   });
 }
+
+function renderSamples() {
+  $('.sample-title').html('<h2>' + $(this).text() + '</h2>');
+  $('.sample-content').load($(this).data('url'), function () {
+    $('pre code').each(function (i, block) {
+      hljs.highlightBlock(block);
+    });
+  });
+}
+
 function getCurrentAnchor() {
   var url = window.location.href;
   if (url.indexOf("#") > -1) {

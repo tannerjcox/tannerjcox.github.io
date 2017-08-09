@@ -1,66 +1,189 @@
 <pre>
     <code>
+// Create a new product using information provided by user
 public function receiveProduct($pendingItem, $previousProduct, $input, $admin)
-    {
-        $now = Carbon::now();
-        $sku = $this->skuDecider->decide($input);
-        if ($previousProduct) {
-            $previousOrderDetails = $previousProduct->orderDetail;
-            $previousOrderDetails->is_buyback_requested = true;
-            $previousOrderDetails->save();
+{
+    $now = Carbon::now();
+    $sku = $this->skuDecider->decide($input);
+    if ($previousProduct) {
+        $previousOrderDetails = $previousProduct->orderDetail;
+        $previousOrderDetails->is_buyback_requested = true;
+        $previousOrderDetails->save();
 
-            $except = ['id', 'previous_product_id', 'created_at', 'updated_at', 'sold_at', 'made_available_at', 'approved_at', 'approver_id', 'reviewed_at', 'reviewer_id'];
-            $product = $previousProduct->replicate($except);
-            $product->sku = SkuType::BUY_BACK;
-            $product->buyback_product_id = $previousProduct->id;
-            $product->purchase_price = $pendingItem ? $pendingItem->buyback_quote : $previousOrderDetails->total * .7;
-            $product->save();
+        $product = $previousProduct->replicate();
+        $product->sku = SkuType::BUY_BACK;
+        $product->buyback_product_id = $previousProduct->id;
+        $product->purchase_price = $pendingItem ? $pendingItem->buyback_quote : $previousOrderDetails->total * .7;
+        $product->save();
 
-            if (array_get($input, 'copy_images')) {
-                $this->imageMigrator->migrate($previousProduct, $product);
-            }
-        } else {
-            if (!$pendingItem) {
-                $title = array_get($input, 'basic_description') ?: 'Unquoted Consignment';
-            } else {
-                $title = array_get($input, 'title') ?: $pendingItem->product_name;
-            }
-            $product = new Product();
-            $product->title = $title;
+        if (array_get($input, 'copy_images')) {
+            $this->imageMigrator->migrate($previousProduct, $product);
         }
-        $product->sku = $sku;
-        $product->hold_status = 'approval_awaiting';
-        $product->quantity = 1;
-        $product->is_enabled = false;
-        $product->updateFromAdmin($admin);
-        $product->updateFromInput($input);
-        if ($pendingItem && $pendingItem->is_showroom_quote) {
-            if (!SkuType::isConsignment($sku) && array_get($input, 'supplier_is_paid')  == 'Yes') {
-                $product->buyout_paid_at = $now;
-                $product->purchase_price = $pendingItem->buyout_quote;
+    } else {
+        if (!$pendingItem) {
+            $title = array_get($input, 'basic_description') ?: 'Unquoted Consignment';
+        } else {
+            $title = array_get($input, 'title') ?: $pendingItem->product_name;
+        }
+        $product = new Product();
+        $product->title = $title;
+    }
+
+    $product->updateFromAdmin($admin);
+    $product->updateFromInput($input);
+    if ($pendingItem && $pendingItem->is_showroom_quote) {
+        if (!SkuType::isConsignment($sku) && array_get($input, 'supplier_is_paid')  == 'Yes') {
+            $product->buyout_paid_at = $now;
+            $product->purchase_price = $pendingItem->buyout_quote;
+        }
+        $product->updatePriceAndReviewFromPendingItem($pendingItem);
+        if (array_get($input, 'is_authentic')) {
+            $this->markAsAuthentic($product, $pendingItem->admin_id);
+            if (!SkuType::isConsignment($sku)) {
+                $this->accountBalanceCredit->payUserForAuthenticAndReviewedProduct($product->supplier, $product, $pendingItem);
             }
-            $product->updatePriceAndReviewFromPendingItem($pendingItem);
-            if (array_get($input, 'is_authentic')) {
-                $this->markAsAuthentic($product, $pendingItem->admin_id);
-                if (!SkuType::isConsignment($sku)) {
-                    $this->accountBalanceCredit->payUserForAuthenticAndReviewedProduct($product->supplier, $product, $pendingItem);
+        }
+    }
+    $product->save();
+    if (array_key_exists('brand_id', $input)) {
+        $product = $this->updateListing($product, $input, $admin);
+    } elseif ($previousProduct) {
+        $categories = $previousProduct->categories()->get();
+        foreach ($categories as $category) {
+            $product->categories()->save($category);
+        }
+        if ($previousProduct->brand()) {
+            $product->brands()->save($previousProduct->brand());
+        }
+    }
+    $this->updateCondition($product, $input);
+    return $product;
+}
+
+// Put product on hold and perform necessary actions on product
+public function updateHoldStatus($product, $removeStatus, $holdStatus)
+{
+    $message = '';
+
+    if($product->isOnActiveLayaway() && !$product->hold_status && $holdStatus) {
+        $message = 'The following item has been marked as "' . unsnake($holdStatus) . '" and is currently on layaway. ' . $product->link;
+        $taskRepository = new TaskRepository();
+        $taskRepository->createTaskForRole(Auth::admin()->get(), Role::findByName('Customer Service') , $message);
+    }
+
+    if ($holdStatus && $product->hold_status != $holdStatus) {
+        $this->markAsOnHold($product, $holdStatus);
+        if (!$product->isActuallySold()) {
+            $product->quantity = 1;
+            $product->is_enabled = false;
+            if ($holdStatus == 'approval_awaiting' && $product->approver) {
+                $product->remover_id = null;
+                $product->removed_from_inventory_at = null;
+                $product->hold_status = null;
+                $product->is_enabled = !$product->isOutletItem();
+            }
+            $product->save();
+            $message = 'This item is in stock: ' . $product->current_status . '.<br/>';
+        } else {
+            $message = 'This item is sold<br/>';
+        }
+    } elseif ($removeStatus && $product->hold_status != $removeStatus) {
+        $product->quantity = 0;
+        $this->markAsOnHold($product, $removeStatus);
+        $message = 'This item is now out of stock: ' . $product->current_status . '.<br/>';
+    } elseif (!$holdStatus && !$removeStatus && $product->hold_status) {
+        $wasHoldForBuyer = $product->hold_status == 'hold_for_buyer';
+        $newAvailableDate = Carbon::parse($product->made_available_at)->addHours(Carbon::now()->diffInHours(Carbon::parse($product->removed_from_inventory_at)));
+        $product->remover_id = null;
+        $product->removed_from_inventory_at = null;
+        if ($product->approver || $product->sku == SkuType::FORCED_PURCHASE) {
+            $product->is_enabled = !$product->isOutletItem();
+            $product->hold_status = null;
+        } else {
+            $product->is_enabled = false;
+            $product->hold_status = 'approval_awaiting';
+        }
+        $product->save();
+        if (!$product->isActuallySold()) {
+            $product->quantity = 1;
+            $product->save();
+            $message = 'This item is in stock: ' . $product->current_status . '.<br/>';
+
+            if ($product->approver) {
+                if ($wasHoldForBuyer) {
+                    $product->made_available_at = $newAvailableDate;
+                } else {
+                    $product->made_available_at = Carbon::now();
                 }
+                $message = 'This item is ' . $product->current_status . ' and is viewable in the store.<br/>';
             }
         }
         $product->save();
-        if (array_key_exists('brand_id', $input)) {
-            $product = $this->updateListing($product, $input, $admin);
-        } elseif ($previousProduct) {
-            $categories = $previousProduct->categories()->get();
-            foreach ($categories as $category) {
-                $product->categories()->save($category);
+    }
+    if ($removeStatus && $product->isOnActiveLayaway()) {
+        $message .= '***This item is on active layaway!***<br>';
+    }
+
+    return $message;
+}
+
+// Switch product sku type and make necessary product adjustments
+public function changeSku($product, $input)
+{
+    $newSku = null;
+    $skuType = $input['skuType'];
+    $pendingItem = $product->pendingItem;
+    switch ($skuType) {
+        case 'Consignment':
+            if($pendingItem && $pendingItem->is_showroom_quote) {
+                $newSku = SkuType::DIRECT_CONSIGNMENT;
+            } else {
+                $newSku = SkuType::WEB_CONSIGNMENT;
             }
-            if ($previousProduct->brand()) {
-                $product->brands()->save($previousProduct->brand());
+            break;
+        case 'Buy Out':
+            if($pendingItem && $pendingItem->is_showroom_quote) {
+                $newSku = SkuType::DIRECT_BUY_OUT;
+            } else {
+                $newSku = SkuType::WEB_BUY_OUT;
+            }
+            break;
+        case 'Outlet':
+            $newSku = SkuType::OUTLET;
+            $product->is_enabled = false;
+    }
+    if ($product->hasImages()) {
+        $this->skuChangeImageRename($newSku, $product);
+    }
+
+    $product->sku = $newSku;
+    $product->save();
+
+    //Consignment -> Buyout
+    if (!SkuType::isConsignment($newSku)) {
+        if (isset($input['purchase_price'])) {
+            $product->purchase_price = $input['purchase_price'];
+            $product->save();
+            if($pendingItem && $pendingItem->buyout_quote > $product->purchase_price) {
+                $pendingItem->has_user_accepted_price_change = true;
+                $pendingItem->save();
+            }
+            $this->accountBalanceTransactionRepository->creditUserForAuthenticAndReviewedProduct($product, $product->pendingItem, 'Sku Change');
+            if (isset($input['is_supplier_paid']) && $input['is_supplier_paid']) {
+                $this->accountBalanceTransactionRepository->createForProduct($product, -$product->transactionSum, 'Sku Change');
             }
         }
-        $this->updateCondition($product, $input);
-        return $product;
     }
+
+    //Buyout -> Consignment
+    if (SkuType::isConsignment($newSku)) {
+        if ($product->isAwaitingPayment() || $product->isPaid()) {
+            $this->accountBalanceTransactionRepository->voidProductTransactions($product);
+        }
+        $product->purchase_price = 0;
+        $product->buyout_paid_at = null;
+        $product->save();
+    }
+}
     </code>
 </pre>
