@@ -8,6 +8,7 @@ $(function () {
     $('.nav-item .nav-link').removeClass('active');
     $(this).addClass('active');
     showHideHomeImage($(this).data('link') === 'home');
+    handleHeaderLinks($(this).data('link'));
   });
 
   var currentPage = getCurrentAnchor();
