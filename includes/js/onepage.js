@@ -26,7 +26,7 @@ function showHideHomeImage(isHomePage) {
 }
 
 function handleHeaderLinks(currentPage) {
-  $('.container').addClass('hidden-xs-up');
+  $('.page-container').addClass('hidden-xs-up');
   $('.' + currentPage + '-container').removeClass('hidden-xs-up');
   $('.nav-item').removeClass('active');
   $('.' + currentPage + '').addClass('active');
