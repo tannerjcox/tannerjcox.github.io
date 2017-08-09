@@ -5,33 +5,31 @@
 $(function () {
   $('.nav-link').click(function () {
     $('title').html($(this).text());
-    $('.main-content').load('includes/' + $(this).data('link') + '.html');
     $('.nav-item .nav-link').removeClass('active');
     $(this).addClass('active');
-
-    console.log($(this).data('link'));
-    if ($(this).data('link') == 'home') {
-      $('.header-image-container').slideDown();
-    } else {
-      $('.header-image-container').slideUp();
-    }
+    showHideHomeImage($(this).data('link') === 'home');
   });
 
   var currentPage = getCurrentAnchor();
-  if (currentPage == 'home') {
-    $('.header-image-container').show();
-  } else {
-    $('.header-image-container').hide();
-  }
+  showHideHomeImage(currentPage === 'home');
+  handleHeaderLinks(currentPage);
+  displaySampleLinks();
+});
 
-  $('.main-content').load('includes/' + currentPage + '.html');
+function showHideHomeImage(isHomePage) {
+  if (isHomePage) {
+    $('.header-image-container').slideDown();
+  } else {
+    $('.header-image-container').slideUp();
+  }
+}
+
+function handleHeaderLinks(currentPage) {
+  $('.container').addClass('hidden');
+  $('.' + currentPage + '-container').removeClass('hidden');
   $('.nav-item').removeClass('active');
   $('.' + currentPage + '').addClass('active');
-  displaySampleLinks();
-  $('.code-samples').click(function () {
-    displaySampleLinks();
-  });
-});
+}
 
 function displaySampleLinks() {
   var links = '';
@@ -46,16 +44,15 @@ function displaySampleLinks() {
     });
     $('#codeSampleLinks').html(links);
   }).done(function () {
-    renderSamples();
     $('.code-sample').click(function () {
-      renderSamples();
+      renderSamples($(this).data('url'));
     });
   });
 }
 
-function renderSamples() {
+function renderSamples(url) {
   $('.sample-title').html('<h2>' + $(this).text() + '</h2>');
-  $('.sample-content').load($(this).data('url'), function () {
+  $('.sample-content').load(url, function () {
     $('pre code').each(function (i, block) {
       hljs.highlightBlock(block);
     });
